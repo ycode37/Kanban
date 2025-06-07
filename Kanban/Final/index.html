@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div id="bgover">
+      <nav>
+        <div id="header">
+          <h2>Task Board</h2>
+        </div>
+      </nav>
+      <main>
+        <div id="Task-Menu">
+          <div id="filter">
+            <button>All Tasks</button><button>In Progress</button>
+            <button id="done">Done</button><button>To-Do</button>
+          </div>
+          <div id="functionality">
+            <button id="adding">Add Task</button>
+            <button>Clear All</button>
+          </div>
+        </div>
+      </main>
+      <div id="itemsdisplay"></div>
+    </div>
+    <div id="modal">
+      <div id="card">
+        <form action="">
+          <div id="nameholder">
+            <input id="name" type="text" placeholder="Enter Your Name" />
+          </div>
+          <input id="submit" type="submit" value="submit" />
+        </form>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

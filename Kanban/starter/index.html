@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kanban Task Board</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #f5f5f4 0%, #e7e5e4 100%);
+        min-height: 100vh;
+        padding: 2rem;
+        color: #27272a;
+        overflow-x: auto;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(
+          circle,
+          rgba(161, 161, 170, 0.1) 0%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        z-index: -1;
+        animation: pulse 4s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+          opacity: 0.3;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.1);
+          opacity: 0.1;
+        }
+      }
+
+      h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #18181b;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.025em;
+      }
+
+      .subtitle {
+        color: #71717a;
+        font-size: 1.1rem;
+        font-weight: 400;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .tabs {
+        display: flex;
+        background: #fafaf9;
+        border-radius: 12px;
+        padding: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e4e4e7;
+      }
+
+      .tab {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        color: #71717a;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .tab::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.8),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .tab:hover::before {
+        left: 100%;
+      }
+
+      .tab.active {
+        background: #18181b;
+        color: white;
+        box-shadow: 0 4px 12px rgba(24, 24, 27, 0.15);
+      }
+
+      .tab:hover:not(.active) {
+        background: #f4f4f5;
+        color: #18181b;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s;
+      }
+
+      .btn:active::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .add-btn {
+        background: #18181b;
+        color: white;
+        box-shadow: 0 4px 12px rgba(24, 24, 27, 0.15);
+      }
+
+      .add-btn:hover {
+        background: #09090b;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(24, 24, 27, 0.2);
+      }
+
+      .clear-btn {
+        background: #f4f4f5;
+        color: #71717a;
+        border: 1px solid #e4e4e7;
+      }
+
+      .clear-btn:hover {
+        background: #ef4444;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.2);
+      }
+
+      .board {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        min-height: 600px;
+      }
+
+      .column {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f4f4f5;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .column::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #a1a1aa, #71717a);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .column:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+      }
+
+      .column:hover::before {
+        opacity: 1;
+      }
+
+      .column[data-status="To-Do"]::before {
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+      }
+
+      .column[data-status="In Progress"]::before {
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+      }
+
+      .column[data-status="Done"]::before {
+        background: linear-gradient(90deg, #10b981, #059669);
+      }
+
+      .column-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f4f4f5;
+      }
+
+      .column-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #18181b;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .task-count {
+        background: #f4f4f5;
+        color: #71717a;
+        border-radius: 20px;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        min-width: 24px;
+        text-align: center;
+        transition: all 0.3s;
+      }
+
+      .task-list {
+        min-height: 200px;
+        transition: all 0.3s;
+      }
+
+      .task-list.drag-over {
+        background: rgba(161, 161, 170, 0.05);
+        border-radius: 12px;
+        outline: 2px dashed #a1a1aa;
+      }
+
+      .task {
+        background: #fafafa;
+        border: 1px solid #f4f4f5;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        cursor: grab;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .task:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: #e4e4e7;
+      }
+
+      .task:active {
+        cursor: grabbing;
+        transform: rotate(5deg) scale(1.02);
+      }
+
+      .task.dragging {
+        opacity: 0.5;
+        transform: rotate(10deg) scale(1.05);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+      }
+
+      .task-title {
+        font-weight: 600;
+        color: #18181b;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+      }
+
+      .task-desc {
+        color: #71717a;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        margin-bottom: 0.75rem;
+      }
+
+      .task-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.75rem;
+      }
+
+      .priority {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .priority.high {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+
+      .priority.medium {
+        background: #fffbeb;
+        color: #d97706;
+        border: 1px solid #fed7aa;
+      }
+
+      .priority.low {
+        background: #f0fdf4;
+        color: #16a34a;
+        border: 1px solid #bbf7d0;
+      }
+
+      .task-actions {
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .task:hover .task-actions {
+        opacity: 1;
+      }
+
+      .task-action {
+        width: 24px;
+        height: 24px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+      }
+
+      .edit-task {
+        background: #f0f9ff;
+        color: #0369a1;
+      }
+
+      .delete-task {
+        background: #fef2f2;
+        color: #dc2626;
+      }
+
+      .task-action:hover {
+        transform: scale(1.1);
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal.show {
+        opacity: 1;
+      }
+
+      .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.8);
+        background: white;
+        padding: 2rem;
+        border-radius: 20px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .modal.show .modal-content {
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f4f4f5;
+      }
+
+      .modal-header h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #18181b;
+      }
+
+      .close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: #f4f4f5;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #71717a;
+        font-size: 1.2rem;
+        transition: all 0.2s;
+      }
+
+      .close:hover {
+        background: #ef4444;
+        color: white;
+        transform: scale(1.1);
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #f4f4f5;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        background: #fafafa;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #18181b;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.1);
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .modal-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+
+      .cancel-btn {
+        background: #f4f4f5;
+        color: #71717a;
+      }
+
+      .save-btn {
+        background: #18181b;
+        color: white;
+      }
+
+      .loading {
+        pointer-events: none;
+        opacity: 0.7;
+      }
+
+      .loading::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #18181b;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          padding: 1rem;
+        }
+
+        .controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .tabs {
+          order: 2;
+        }
+
+        .action-buttons {
+          order: 1;
+          justify-content: center;
+        }
+
+        .board {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Kanban Board</h1>
+        <p class="subtitle">Organize your tasks with style and efficiency</p>
+      </div>
+
+      <div class="controls">
+        <div class="tabs">
+          <button class="tab active" data-filter="all">All Tasks</button>
+          <button class="tab" data-filter="To-Do">To-Do</button>
+          <button class="tab" data-filter="In Progress">In Progress</button>
+          <button class="tab" data-filter="Done">Done</button>
+        </div>
+        <div class="action-buttons">
+          <button class="btn add-btn" onclick="openModal()">
+            <span>+</span> Add Task
+          </button>
+          <button class="btn clear-btn" onclick="clearAllTasks()">
+            <span>🗑</span> Clear All
+          </button>
+        </div>
+      </div>
+
+      <div class="board">
+        <div class="column" data-status="To-Do">
+          <div class="column-header">
+            <h2><span>📝</span> To-Do</h2>
+            <span class="task-count" id="todo-count">0</span>
+          </div>
+          <div
+            class="task-list"
+            id="todo-list"
+            ondragover="allowDrop(event)"
+            ondrop="drop(event)"
+          ></div>
+        </div>
+
+        <div class="column" data-status="In Progress">
+          <div class="column-header">
+            <h2><span>⚡</span> In Progress</h2>
+            <span class="task-count" id="inprogress-count">0</span>
+          </div>
+          <div
+            class="task-list"
+            id="inprogress-list"
+            ondragover="allowDrop(event)"
+            ondrop="drop(event)"
+          ></div>
+        </div>
+
+        <div class="column" data-status="Done">
+          <div class="column-header">
+            <h2><span>✅</span> Done</h2>
+            <span class="task-count" id="done-count">0</span>
+          </div>
+          <div
+            class="task-list"
+            id="done-list"
+            ondragover="allowDrop(event)"
+            ondrop="drop(event)"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="task-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-title">Add New Task</h2>
+          <button class="close" onclick="closeModal()">×</button>
+        </div>
+
+        <div class="form-group">
+          <label for="task-title">Task Title*</label>
+          <input
+            type="text"
+            id="task-title"
+            placeholder="Enter a descriptive title for your task"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="task-desc">Description</label>
+          <textarea
+            id="task-desc"
+            placeholder="Optional detailed description of the task"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="task-status">Status</label>
+          <select id="task-status">
+            <option value="To-Do">To-Do</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="task-priority">Priority</label>
+          <select id="task-priority">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+
+        <div class="modal-buttons">
+          <button class="btn cancel-btn" onclick="closeModal()">Cancel</button>
+          <button class="btn save-btn" onclick="saveTask()">Save Task</button>
+        </div>
+      </div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
