@@ -41,7 +41,7 @@ function saveTask() {
 let currentEditId = null;
 let draggedElement = null;
 
-// Initialize the app
+
 document.addEventListener("DOMContentLoaded", function () {
   loadTasks();
   renderTasks();
@@ -74,7 +74,7 @@ function setupKeyboardShortcuts() {
 }
 
 function setupDragAndDrop() {
-  // Remove drag-over class when dragging leaves
+
   document.querySelectorAll(".task-list").forEach((list) => {
     list.addEventListener("dragleave", function (e) {
       if (!this.contains(e.relatedTarget)) {
@@ -228,7 +228,7 @@ function createTaskElement(task) {
   taskElement.dataset.taskId = task.id;
   taskElement.dataset.status = task.status;
 
-  // Capitalize priority for display
+
   const priorityDisplay =
     task.priority.charAt(0).toUpperCase() + task.priority.slice(1);
 
@@ -307,7 +307,7 @@ function filterTasks(filter) {
 }
 
 function saveTasks() {
-  // Store tasks in localStorage for persistence
+
   try {
     localStorage.setItem("kanban_tasks", JSON.stringify(tasks));
   } catch (e) {
@@ -316,13 +316,13 @@ function saveTasks() {
 }
 
 function loadTasks() {
-  // Load tasks from localStorage
+
   try {
     const savedTasks = localStorage.getItem("kanban_tasks");
     if (savedTasks) {
       tasks = JSON.parse(savedTasks);
     } else {
-      // Initialize with sample tasks if no saved data
+
       tasks = [
         {
           id: 1,
@@ -372,18 +372,18 @@ function loadTasks() {
     }
   } catch (e) {
     console.warn("Could not load tasks from localStorage:", e);
-    // Fallback to sample data
+
     tasks = [];
   }
 }
 
 function showNotification(message, type = "success") {
-  // Create notification element
+
   const notification = document.createElement("div");
   notification.className = `notification ${type}`;
   notification.textContent = message;
 
-  // Add styles
+
   Object.assign(notification.style, {
     position: "fixed",
     top: "20px",
@@ -399,7 +399,7 @@ function showNotification(message, type = "success") {
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
   });
 
-  // Set background color based on type
+
   if (type === "success") {
     notification.style.background = "#10b981";
   } else if (type === "error") {
@@ -410,12 +410,12 @@ function showNotification(message, type = "success") {
 
   document.body.appendChild(notification);
 
-  // Animate in
+
   setTimeout(() => {
     notification.style.transform = "translateX(0)";
   }, 10);
 
-  // Auto remove after 3 seconds
+
   setTimeout(() => {
     notification.style.transform = "translateX(100%)";
     notification.style.opacity = "0";
@@ -433,14 +433,14 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Handle modal clicks outside content
+
 document.getElementById("task-modal").addEventListener("click", function (e) {
   if (e.target === this) {
     closeModal();
   }
 });
 
-// Handle form submission with Enter key
+
 document.getElementById("task-title").addEventListener("keydown", function (e) {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -448,7 +448,7 @@ document.getElementById("task-title").addEventListener("keydown", function (e) {
   }
 });
 
-// Auto-resize textarea
+
 document.getElementById("task-desc").addEventListener("input", function () {
   this.style.height = "auto";
   this.style.height = this.scrollHeight + "px";
